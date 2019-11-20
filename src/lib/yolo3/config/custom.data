@@ -1,0 +1,4 @@
+classes= 1
+train=./lib/yolo3/data/custom/train.txt
+valid=./lib/yolo3/data/custom/valid.txt
+names=./lib/yolo3/data/custom/classes.names
