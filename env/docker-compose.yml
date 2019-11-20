@@ -1,0 +1,47 @@
+version: '3.5'
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - ../pgdb:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=ai2019
+      - POSTGRES_USER=userid
+      - POSTGRES_PASSWORD=userpw
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    ports:
+      - "5432:5432"
+
+  src:
+    build:
+      context: "../"
+      shm_size: '8gb'
+      dockerfile: /env/Dockerfile
+    volumes:
+      - ../src:/app
+      - $HOME/data:/data
+      - $HOME/models:/models
+      - $HOME/results:/results
+    links:
+      - db
+    environment:
+      - DJANGO_DEBUG=True
+      - DJANGO_DB_HOST=db
+      - DJANGO_DB_PORT=5432
+      - DJANGO_DB_NAME=ai2019
+      - DJANGO_DB_USERNAME=userid
+      - DJANGO_DB_PASSWORD=userpw
+      - DJANGO_SECRET_KEY=dev_secret_key
+    ports:
+      - "8000:8000"
+      - "6006:6006"
+    command:
+      - df -k /dev/shm
+      - bash
+      - -c
+      - |
+        /wait-for-it.sh db:5432 -t 10
+        python manage.py makemigrations
+        python manage.py migrate
+        python run.py --input "/data/input/t1_video" --output "/results" --count 500 --step 10
